@@ -7,22 +7,22 @@
          :user "cljruser"
          :password "password"})
 
-(defn sql-query [query-string func]
+(defn sql-query [^String query-string func]
   (sql/with-connection db
      (sql/with-query-results rows
        [query-string]
          (func rows))))
 
-(defn select-query [query-string]
+(defn select-query [^String query-string]
   (sql-query query-string
     (fn [rows]
       (println (keys (first rows)))
       (doseq [row rows] (println (vals row))))))
 
-(defn select-query-vertical [query-string]
+(defn select-query-vertical [^String query-string]
   (sql-query query-string
     (fn [rows]
       (doseq [row rows]
-        (println "------------------------------------------------------")
+        (println (apply str (repeat 60 "-")))
         (doseq [field row]
           (println field))))))
