@@ -1,5 +1,7 @@
 (ns mysqlcli.core
-  (:require [clojure.java.jdbc :as sql]))
+  (:require [clojure.java.jdbc :as sql]
+            [mysqlcli.prompt :as prompt])
+  (:gen-class))
 
 (def db {:classname "com.mysql.jdbc.Driver"
          :subprotocol "mysql"
@@ -26,3 +28,8 @@
         (println (apply str (repeat 60 "-")))
         (doseq [field row]
           (println field))))))
+
+(defn -main [& args]
+  (while true (try (select-query (prompt/show-prompt))
+                (catch Exception e 
+                  (println (str "ERROR: " (.getMessage e)))))))
