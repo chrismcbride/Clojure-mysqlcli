@@ -43,7 +43,9 @@
   (changeDatabase (:value command)))
 
 (defmethod execute-input :QUERY [query]
-  (print-select-query (:value query)))
+  (if (:vertical query)
+    (print-select-query-vertical (:value query))
+    (print-select-query (:value query))))
 
 (defn -main [& args]
   (forever (try (execute-input (prompt/get-input-from-user @dbName))
