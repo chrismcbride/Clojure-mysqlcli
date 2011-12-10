@@ -1,12 +1,13 @@
 (ns mysqlcli.core
   (:use   [mysqlcli.macros])
   (:require [clojure.java.jdbc :as sql]
+            [mysqlcli.printer :as printer]
             [mysqlcli.prompt :as prompt])
   (:gen-class))
 
 (def- dbName (ref "rjmadmin"))
 
-(defn- get-connection []
+(defn- get-connection-info []
   {:classname "com.mysql.jdbc.Driver"
    :subprotocol "mysql"
    :subname (str "//192.168.56.10:3306/" @dbName)
@@ -14,24 +15,10 @@
    :password "password"})
   
 (defn- run-sql-query [query-string func]
-  (sql/with-connection (get-connection)
+  (sql/with-connection (get-connection-info)
      (sql/with-query-results rows
        [query-string]
          (func rows))))
-
-(defn- print-select-query [query-string]
-  (run-sql-query query-string
-    (fn [rows]
-      (println (keys (first rows)))
-      (doseq [row rows] (println (vals row))))))
-
-(defn- print-select-query-vertical [query-string]
-  (run-sql-query query-string
-    (fn [rows]
-      (doseq [row rows]
-        (println (apply str (repeat 60 "-")))
-        (doseq [field row]
-          (println field))))))
 
 (defn- changeDatabase [newDbNameStr]
   (dosync
@@ -43,9 +30,10 @@
   (changeDatabase (:value command)))
 
 (defmethod execute-input :QUERY [query]
-  (if (:vertical query)
-    (print-select-query-vertical (:value query))
-    (print-select-query (:value query))))
+  (let [func (partial run-sql-query (:value query))]
+    (if (:vertical query)
+      (func printer/print-select-query-vertical)
+      (func printer/print-select-query))))
 
 (defn -main [& args]
   (forever (try (execute-input (prompt/get-input-from-user @dbName))
