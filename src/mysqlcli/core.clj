@@ -2,8 +2,7 @@
   (:use   [mysqlcli.macros])
   (:require [clojure.java.jdbc :as sql]
             [mysqlcli.printer :as printer]
-            [mysqlcli.prompt :as prompt])
-  (:gen-class))
+            [mysqlcli.prompt :as prompt]))
 
 (def- dbName (ref "rjmadmin"))
 
@@ -24,14 +23,14 @@
   (dosync
     (ref-set dbName newDbNameStr)))
 
-(defmulti execute-input :type)
+(defmulti execute-input class)
 
-(defmethod execute-input :CHANGEDB [command]
-  (changeDatabase (:value command)))
+(defmethod execute-input mysqlcli.datatypes.Command [command]
+  (changeDatabase (:string command)))
 
-(defmethod execute-input :QUERY [query]
-  (let [func (partial run-sql-query (:value query))]
-    (if (:vertical query)
+(defmethod execute-input mysqlcli.datatypes.Query [query]
+  (let [func (partial run-sql-query (:string query))]
+    (if (:isVertical query)
       (func printer/print-select-query-vertical)
       (func printer/print-select-query))))
 
